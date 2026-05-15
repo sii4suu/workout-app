@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>筋トレ管理</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:-apple-system,'Helvetica Neue',sans-serif;background:#f4f4f4;color:#111;font-size:16px;}
+.app{max-width:480px;margin:0 auto;padding:1rem;padding-bottom:80px;}
+.app-header{margin-bottom:1.5rem;padding-top:0.5rem;}
+.app-title{font-size:22px;font-weight:600;}
+.app-sub{font-size:13px;color:#888;margin-top:2px;}
+
+.tab-bar{display:flex;gap:4px;margin-bottom:1.5rem;background:#e8e8e8;border-radius:10px;padding:4px;}
+.tab{flex:1;padding:8px 2px;text-align:center;font-size:11px;border:none;background:transparent;cursor:pointer;border-radius:7px;color:#888;font-family:inherit;}
+.tab.active{background:#fff;color:#111;font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,0.1);}
+
+.card{background:#fff;border-radius:14px;padding:1rem 1.1rem;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,0.07);}
+
+.btn{padding:8px 14px;font-size:13px;border:1.5px solid #ddd;border-radius:10px;background:#fff;cursor:pointer;color:#111;font-family:inherit;font-weight:500;}
+.btn:active{opacity:0.7;transform:scale(0.97);}
+.btn-primary{background:#111;color:#fff;border-color:#111;}
+.btn-danger{color:#c62828;border-color:#ffd0d0;background:#fff8f8;}
+
+select{padding:8px 10px;font-size:14px;border:1.5px solid #e0e0e0;border-radius:10px;background:#f9f9f9;color:#111;font-family:inherit;appearance:none;-webkit-appearance:none;}
+select:focus{outline:none;border-color:#555;background:#fff;}
+input[type=number],input[type=text]{padding:8px 10px;font-size:14px;border:1.5px solid #e0e0e0;border-radius:10px;background:#f9f9f9;color:#111;font-family:inherit;width:100%;}
+input:focus{outline:none;border-color:#555;background:#fff;}
+
+.ex-title{font-size:15px;font-weight:600;margin-bottom:2px;}
+.ex-sub{font-size:12px;color:#aaa;margin-bottom:10px;}
+.set-row{display:flex;gap:8px;align-items:center;margin-bottom:8px;}
+.set-lbl{font-size:12px;color:#aaa;min-width:44px;font-weight:500;}
+.set-lbl2{font-size:12px;color:#aaa;min-width:36px;text-align:right;}
+.prev-hint{font-size:11px;color:#aaa;margin-bottom:6px;}
+
+.sets-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.set-cell{background:#f5f5f5;border-radius:10px;padding:8px;}
+.set-cell-lbl{font-size:11px;color:#aaa;margin-bottom:4px;font-weight:600;}
+
+.rack-row{display:flex;gap:8px;align-items:center;margin-top:6px;}
+.rack-lbl{font-size:12px;color:#888;min-width:70px;}
+
+.prog-card{background:#fff;border-radius:14px;padding:1rem 1.1rem;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.07);}
+.prog-name{font-size:15px;font-weight:600;}
+.prog-sub{font-size:12px;color:#aaa;margin-bottom:8px;}
+.prog-w{font-size:30px;font-weight:700;letter-spacing:-1px;}
+.prog-unit{font-size:14px;color:#888;}
+.trend-up{color:#2e7d32;font-size:12px;font-weight:600;}
+.trend-dn{color:#c62828;font-size:12px;font-weight:600;}
+.mini-log{margin-top:8px;border-top:1px solid #f0f0f0;padding-top:8px;}
+.mini-row{display:flex;justify-content:space-between;font-size:12px;color:#888;padding:2px 0;gap:6px;}
+
+.graph-tab-bar{display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap;}
+.graph-tab{padding:6px 12px;font-size:12px;border:1.5px solid #ddd;border-radius:10px;background:#fff;cursor:pointer;color:#888;font-family:inherit;font-weight:500;}
+.graph-tab.active{background:#111;color:#fff;border-color:#111;}
+.graph-type-bar{display:flex;gap:4px;margin-bottom:12px;}
+.graph-type-btn{flex:1;padding:7px;font-size:12px;border:1.5px solid #ddd;border-radius:10px;background:#fff;cursor:pointer;color:#888;font-family:inherit;text-align:center;font-weight:500;}
+.graph-type-btn.active{background:#f0f0f0;color:#111;font-weight:600;border-color:#bbb;}
+.bar-wrap{overflow-x:auto;padding-bottom:4px;}
+
+.hist-card{background:#fff;border-radius:14px;padding:1rem 1.1rem;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.07);}
+.hist-item{padding:8px 0;border-bottom:1px solid #f5f5f5;}
+.hist-item:last-child{border-bottom:none;}
+.badge{display:inline-block;font-size:11px;padding:3px 9px;border-radius:20px;background:#f0f0f0;color:#555;border:1px solid #e0e0e0;font-weight:500;}
+.confirm-bar{display:flex;gap:8px;padding:10px;background:#fff3f3;border-radius:10px;align-items:center;margin-top:8px;border:1px solid #ffd0d0;}
+.empty{text-align:center;padding:2.5rem 0;color:#bbb;font-size:14px;}
+
+/* サブメニュー */
+.sub-item-card{background:#fff;border-radius:14px;padding:1rem 1.1rem;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.07);border-left:3px solid #ddd;}
+.sub-section-title{font-size:13px;font-weight:600;color:#555;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #f0f0f0;}
+.sub-history-block{background:#f9f9f9;border-radius:10px;padding:10px;margin-top:8px;}
+.sub-history-label{font-size:11px;color:#aaa;font-weight:600;margin-bottom:6px;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="app-header">
+    <p class="app-title">筋トレ管理</p>
+    <p class="app-sub">クイック入力対応</p>
+  </div>
+
+  <div class="tab-bar">
+    <button class="tab active" onclick="showTab('log')">記録する</button>
+    <button class="tab" onclick="showTab('progress')">進捗</button>
+    <button class="tab" onclick="showTab('graph')">グラフ</button>
+    <button class="tab" onclick="showTab('history')">履歴</button>
+    <button class="tab" onclick="showTab('sub')">サブ</button>
+  </div>
+
+  <!-- 記録タブ -->
+  <div id="tab-log">
+    <div id="log-form"></div>
+    <button class="btn btn-primary" style="width:100%;padding:13px;margin-top:4px;" onclick="saveLog()">記録を保存</button>
+  </div>
+
+  <!-- 進捗タブ -->
+  <div id="tab-progress" style="display:none;">
+    <div id="progress-cards"></div>
+  </div>
+
+  <!-- グラフタブ -->
+  <div id="tab-graph" style="display:none;">
+    <div class="graph-tab-bar" id="graph-ex-tabs"></div>
+    <div class="graph-type-bar">
+      <button class="graph-type-btn active" id="gtype-1rm" onclick="setGraphType('1rm')">推定1RM</button>
+      <button class="graph-type-btn" id="gtype-vol" onclick="setGraphType('vol')">ボリューム</button>
+    </div>
+    <div id="graph-area"></div>
+  </div>
+
+  <!-- 履歴タブ -->
+  <div id="tab-history" style="display:none;">
+    <div id="history-list"></div>
+  </div>
+
+  <!-- サブメニュータブ -->
+  <div id="tab-sub" style="display:none;">
+    <div id="sub-log-form"></div>
+    <button class="btn" style="width:100%;padding:12px;margin-top:4px;border-style:dashed;" onclick="addSubItem()">＋ 種目を追加</button>
+  </div>
+</div>
+
+<script>
+// =====================
+// 定数・データ定義
+// =====================
+const REP_OPTS = Array.from({length:21}, (_,i) => i);
+
+const EXERCISES = [
+  {id:'cardio',  name:'クロストレーナー', sub:'有酸素運動',        cat:'有酸素', type:'cardio',
+   durOpts:Array.from({length:51},(_,i)=>10+i)},
+  {id:'shoulder',name:'ショルダープレス',  sub:'バーチカルプレス',  cat:'肩',     type:'weight', sets:3,
+   options:Array.from({length:11},(_,i)=>+(10+i*2).toFixed(1)), unit:'kg', sameWeight:true},
+  {id:'bench',   name:'ベンチプレス',      sub:'ホリゾンタルプレス',cat:'胸',     type:'weight', sets:3,
+   options:Array.from({length:41},(_,i)=>+(40+i*2.5).toFixed(1)),unit:'kg', rack:true, safety:true},
+  {id:'pullup',  name:'プルアップ',        sub:'バーチカルプル',    cat:'背中',   type:'weight', sets:3,
+   options:Array.from({length:7},(_,i)=>-30+i*5), unit:'kg', note:'マイナス = アシスト'},
+  {id:'deadlift',name:'デッドリフト',      sub:'ヒップヒンジ',      cat:'脚後部', type:'weight', sets:3,
+   options:Array.from({length:41},(_,i)=>+(50+i*2.5).toFixed(1)),unit:'kg', heavyFormula:true},
+  {id:'squat',   name:'スクワット',        sub:'スクワット',        cat:'脚前部', type:'weight', sets:3,
+   options:Array.from({length:41},(_,i)=>+(50+i*2.5).toFixed(1)),unit:'kg', rack:true, safety:true, heavyFormula:true},
+];
+const WEIGHT_EX = EXERCISES.filter(e => e.type === 'weight');
+
+// =====================
+// ストレージ
+// =====================
+let logs = [];
+let draft = {}; // 入力途中の内容を保持
+let subItems = []; // サブメニュー種目リスト [{id, name, weight, history:[{sets:[{reps}]},...]}, ...]
+
+function loadAll() {
+  try { logs      = JSON.parse(localStorage.getItem('wt_v9_logs'))    || []; } catch(e){ logs=[]; }
+  try { draft     = JSON.parse(localStorage.getItem('wt_v9_draft'))   || {}; } catch(e){ draft={}; }
+  try { subItems  = JSON.parse(localStorage.getItem('wt_v9_sub'))     || []; } catch(e){ subItems=[]; }
+}
+function saveAll() {
+  try { localStorage.setItem('wt_v9_logs',  JSON.stringify(logs));     } catch(e){}
+  try { localStorage.setItem('wt_v9_draft', JSON.stringify(draft));    } catch(e){}
+  try { localStorage.setItem('wt_v9_sub',   JSON.stringify(subItems)); } catch(e){}
+}
+function saveDraft() {
+  try { localStorage.setItem('wt_v9_draft', JSON.stringify(draft)); } catch(e){}
+}
+
+loadAll();
+
+// =====================
+// ユーティリティ
+// =====================
+function calc1rm(w, r, heavy) {
+  if (!w || !r || r <= 0) return null;
+  return Math.round(w * r / (heavy ? 33.3 : 40) + w);
+}
+function getLastLog(exId) {
+  for (const l of logs) {
+    const e = l.exercises.find(x => x.id === exId);
+    if (e) return e;
+  }
+  return null;
+}
+function defIdx(opts, val) {
+  const i = opts.indexOf(val);
+  return i >= 0 ? i : 0;
+}
+function repSelect(id, defVal, onchange) {
+  const oc = onchange ? ` onchange="${onchange}"` : '';
+  return `<select id="${id}"${oc}>${REP_OPTS.map(v=>`<option value="${v}"${v===defVal?' selected':''}>${v}</option>`).join('')}</select>`;
+}
+
+// =====================
+// タブ切り替え
+// =====================
+function showTab(name) {
+  ['log','progress','graph','history','sub'].forEach((t, i) => {
+    document.getElementById('tab-'+t).style.display = t === name ? '' : 'none';
+    document.querySelectorAll('.tab')[i].classList.toggle('active', t === name);
+  });
+  if (name === 'progress') renderProgress();
+  if (name === 'graph') {
+    currentGraphEx = WEIGHT_EX[0].id;
+    currentGraphType = '1rm';
+    document.getElementById('gtype-1rm').classList.add('active');
+    document.getElementById('gtype-vol').classList.remove('active');
+    renderGraph();
+  }
+  if (name === 'history') renderHistory();
+  if (name === 'sub') renderSubTab();
+}
+
+// =====================
+// 記録フォーム（ドラフト保存付き）
+// =====================
+function renderLogForm() {
+  const el = document.getElementById('log-form');
+  el.innerHTML = EXERCISES.map(ex => {
+    const last = getLastLog(ex.id);
+
+    if (ex.type === 'cardio') {
+      const defDur = draft['cardio-dur'] !== undefined ? draft['cardio-dur'] : (last ? last.duration : 30);
+      const defInt = draft['cardio-intensity'] !== undefined ? draft['cardio-intensity'] : (last ? last.intensity : '');
+      const defSpd = draft['cardio-speed']     !== undefined ? draft['cardio-speed']     : (last ? last.speed    : '');
+      return `<div class="card" style="margin-bottom:12px;">
+        <p class="ex-title">${ex.name}</p><p class="ex-sub">${ex.sub}</p>
+        ${last ? `<p class="prev-hint">前回: ${last.duration}分 / 強度: ${last.intensity||'-'} / 速さ: ${last.speed||'-'}</p>` : ''}
+        <div class="set-row" style="margin-bottom:8px;">
+          <span class="set-lbl">時間</span>
+          <select id="cardio-dur" style="flex:1;" onchange="saveDraftField('cardio-dur',this.value,'int')">
+            ${ex.durOpts.map(v=>`<option value="${v}"${v==defDur?' selected':''}>${v}分</option>`).join('')}
+          </select>
+        </div>
+        <div class="set-row" style="margin-bottom:8px;">
+          <span class="set-lbl">強度</span>
+          <input type="number" id="cardio-intensity" placeholder="例: 8" value="${defInt}" min="1" max="20" style="flex:1;"
+            oninput="saveDraftField('cardio-intensity',this.value,'str')" />
+        </div>
+        <div class="set-row">
+          <span class="set-lbl">速さ</span>
+          <input type="number" id="cardio-speed" placeholder="例: 6.5" value="${defSpd}" min="0" step="0.1" style="flex:1;"
+            oninput="saveDraftField('cardio-speed',this.value,'str')" />
+        </div>
+      </div>`;
+    }
+
+    // 重量種目
+    const lastSets = last ? last.sets : null;
+    const defW0 = lastSets && lastSets[0] ? lastSets[0].weight : ex.options[0];
+
+    let html = `<div class="card" style="margin-bottom:12px;">
+      <p class="ex-title">${ex.name}</p>
+      <p class="ex-sub">${ex.sub}${ex.note ? ` · ${ex.note}` : ''}</p>`;
+
+    if (ex.rack || ex.safety) {
+      const lr  = draft[`${ex.id}-rack`]   !== undefined ? draft[`${ex.id}-rack`]   : (last && last.rack   ? last.rack   : '');
+      const ls2 = draft[`${ex.id}-safety`] !== undefined ? draft[`${ex.id}-safety`] : (last && last.safety ? last.safety : '');
+      html += `<div style="margin-bottom:10px;padding:8px 10px;background:#f5f5f5;border-radius:10px;">
+        <p style="font-size:11px;color:#888;margin-bottom:6px;font-weight:600;">ラック設定メモ</p>
+        ${ex.rack   ? `<div class="rack-row"><span class="rack-lbl">ラック高さ</span><input type="text" id="${ex.id}-rack"   placeholder="例: 8" value="${lr}"  oninput="saveDraftField('${ex.id}-rack',  this.value,'str')" /></div>` : ''}
+        ${ex.safety ? `<div class="rack-row"><span class="rack-lbl">セーフティ</span><input type="text" id="${ex.id}-safety" placeholder="例: 5" value="${ls2}" oninput="saveDraftField('${ex.id}-safety',this.value,'str')" /></div>` : ''}
+      </div>`;
+    }
+
+    if (ex.sameWeight) {
+      const draftW = draft[`${ex.id}-w-all`] !== undefined ? draft[`${ex.id}-w-all`] : defW0;
+      const di = defIdx(ex.options, draftW);
+      const shifted = [...ex.options.slice(di), ...ex.options.slice(0, di)];
+      html += `<div class="set-row" style="margin-bottom:12px;">
+        <span class="set-lbl">重量</span>
+        <select id="${ex.id}-w-all" style="flex:1;" onchange="saveDraftField('${ex.id}-w-all',parseFloat(this.value),'num')">
+          ${shifted.map(v=>`<option value="${v}">${v}${ex.unit}</option>`).join('')}
+        </select>
+      </div><div class="sets-grid">`;
+      for (let s = 1; s <= 3; s++) {
+        // rep: ドラフトにあればそれ、なければ0（毎回リセット）
+        const dr = draft[`${ex.id}-r-${s}`] !== undefined ? draft[`${ex.id}-r-${s}`] : 0;
+        html += `<div class="set-cell"><p class="set-cell-lbl">${s}セット rep</p>
+          ${repSelect(`${ex.id}-r-${s}`, dr, `saveDraftField('${ex.id}-r-${s}',parseInt(this.value),'num')`)}
+        </div>`;
+      }
+      html += `</div>`;
+    } else {
+      for (let s = 1; s <= 3; s++) {
+        const lw    = lastSets && lastSets[s-1] ? lastSets[s-1].weight : defW0;
+        const draftW = draft[`${ex.id}-w-${s}`] !== undefined ? draft[`${ex.id}-w-${s}`] : lw;
+        const lwi   = defIdx(ex.options, draftW);
+        const sh2   = [...ex.options.slice(lwi), ...ex.options.slice(0, lwi)];
+        const dr    = draft[`${ex.id}-r-${s}`] !== undefined ? draft[`${ex.id}-r-${s}`] : 0;
+        html += `<div class="set-row">
+          <span class="set-lbl">${s}セット</span>
+          <select id="${ex.id}-w-${s}" style="flex:1;" onchange="saveDraftField('${ex.id}-w-${s}',parseFloat(this.value),'num')">
+            ${sh2.map(v=>`<option value="${v}">${v}${ex.unit}</option>`).join('')}
+          </select>
+          <span class="set-lbl2">rep</span>
+          <div style="width:72px;">${repSelect(`${ex.id}-r-${s}`, dr, `saveDraftField('${ex.id}-r-${s}',parseInt(this.value),'num')`)}</div>
+        </div>`;
+      }
+    }
+    return html + '</div>';
+  }).join('');
+}
+
+function saveDraftField(key, val, type) {
+  if (type === 'int') draft[key] = parseInt(val) || 0;
+  else if (type === 'num') draft[key] = val;
+  else draft[key] = val;
+  saveDraft();
+}
+
+function saveLog() {
+  const exercises = EXERCISES.map(ex => {
+    const rackEl   = document.getElementById(`${ex.id}-rack`);
+    const safetyEl = document.getElementById(`${ex.id}-safety`);
+
+    if (ex.type === 'cardio') {
+      const dur      = parseInt(document.getElementById('cardio-dur').value) || 0;
+      const intensity = document.getElementById('cardio-intensity').value;
+      const speed     = document.getElementById('cardio-speed').value;
+      return { id:ex.id, name:ex.name, cat:ex.cat, duration:dur, intensity, speed };
+    }
+
+    let sets;
+    if (ex.sameWeight) {
+      const w = parseFloat(document.getElementById(`${ex.id}-w-all`).value);
+      sets = [1,2,3].map(s => {
+        const r = parseInt(document.getElementById(`${ex.id}-r-${s}`).value) || 0;
+        return r > 0 ? {weight:w, reps:r} : null;
+      }).filter(Boolean);
+    } else {
+      sets = [1,2,3].map(s => {
+        const w = parseFloat(document.getElementById(`${ex.id}-w-${s}`).value);
+        const r = parseInt(document.getElementById(`${ex.id}-r-${s}`).value) || 0;
+        return r > 0 ? {weight:w, reps:r} : null;
+      }).filter(Boolean);
+    }
+    if (!sets.length) return null;
+    return { id:ex.id, name:ex.name, cat:ex.cat,
+      rack:rackEl?rackEl.value:'', safety:safetyEl?safetyEl.value:'', sets };
+  }).filter(Boolean);
+
+  if (!exercises.length) { alert('rep数を1以上入力してください'); return; }
+
+  logs.unshift({ date: new Date().toLocaleDateString('ja-JP'), exercises });
+
+  // rep のドラフトをリセット（重量は保持）
+  EXERCISES.forEach(ex => {
+    if (ex.type !== 'weight') return;
+    for (let s = 1; s <= 3; s++) {
+      delete draft[`${ex.id}-r-${s}`];
+    }
+  });
+
+  saveAll();
+  renderLogForm(); // repが0にリセットされた状態で再描画
+  alert('記録を保存しました！');
+  showTab('progress');
+}
+
+// =====================
+// 進捗
+// =====================
+function renderProgress() {
+  const el = document.getElementById('progress-cards');
+  el.innerHTML = EXERCISES.map(ex => {
+    const history  = logs.map(l => l.exercises.find(e => e.id === ex.id)).filter(Boolean);
+    const logDates = logs.filter(l => l.exercises.find(e => e.id === ex.id));
+
+    if (ex.type === 'cardio') {
+      const last = history[0];
+      return `<div class="prog-card">
+        <p class="prog-name">${ex.name}</p><p class="prog-sub">${ex.sub}</p>
+        ${last ? `<div style="display:flex;gap:16px;margin-bottom:8px;">
+          <div><p style="font-size:11px;color:#aaa;">時間</p><p style="font-size:22px;font-weight:700;">${last.duration}<span style="font-size:13px;color:#888;">分</span></p></div>
+          ${last.intensity?`<div><p style="font-size:11px;color:#aaa;">強度</p><p style="font-size:22px;font-weight:700;">${last.intensity}</p></div>`:''}
+          ${last.speed?`<div><p style="font-size:11px;color:#aaa;">速さ</p><p style="font-size:22px;font-weight:700;">${last.speed}</p></div>`:''}
+        </div>
+        <div class="mini-log">${history.slice(0,4).map((h,i)=>
+          `<div class="mini-row"><span>${logDates[i]?logDates[i].date:''}</span><span>${h.duration}分</span><span>強度:${h.intensity||'-'}</span><span>速さ:${h.speed||'-'}</span></div>`
+        ).join('')}</div>` : '<p style="font-size:13px;color:#bbb;">まだ記録なし</p>'}
+      </div>`;
+    }
+
+    const last = history[0]; const prev = history[1];
+    const sets0  = last && last.sets && last.sets.length ? last.sets : null;
+    const cur1rm = sets0 ? Math.max(...sets0.map(s => calc1rm(s.weight,s.reps,ex.heavyFormula)||0)) : null;
+    const prev1rm = prev && prev.sets && prev.sets.length ? Math.max(...prev.sets.map(s => calc1rm(s.weight,s.reps,ex.heavyFormula)||0)) : null;
+    const diff = cur1rm !== null && prev1rm !== null ? cur1rm - prev1rm : null;
+    const trendHtml = diff !== null ? (diff>0?`<span class="trend-up"> ▲ +${diff}kg</span>`:diff<0?`<span class="trend-dn"> ▼ ${diff}kg</span>`:`<span style="color:#aaa;font-size:12px;"> → 変化なし</span>`):'';
+    const rackInfo = last && last.rack ? `<p style="font-size:12px;color:#aaa;margin-top:4px;">ラック: ${last.rack}${last.safety?' / セーフティ: '+last.safety:''}</p>` : '';
+    const setsDetail = sets0 ? `<div style="margin:6px 0;">${sets0.map((s,i)=>
+      `<span style="font-size:12px;color:#888;margin-right:8px;">${i+1}セット: ${s.weight}kg × ${s.reps}rep = <b style="color:#111;">${s.weight*s.reps}kg</b></span>`
+    ).join('')}</div>` : '';
+    const miniRows = history.slice(0,4).map((h,i) => {
+      if (!h.sets||!h.sets.length) return '';
+      const m1  = Math.max(...h.sets.map(s=>calc1rm(s.weight,s.reps,ex.heavyFormula)||0));
+      const reps = h.sets.map(s=>`${s.reps}rep`).join('/');
+      const vol  = h.sets.reduce((a,s)=>a+s.weight*s.reps,0);
+      return `<div class="mini-row"><span style="white-space:nowrap;">${logDates[i]?logDates[i].date:''}</span><span style="font-weight:600;">${m1}kg</span><span>${reps}</span><span style="white-space:nowrap;">${vol}kg</span></div>`;
+    }).join('');
+
+    return `<div class="prog-card">
+      <p class="prog-name">${ex.name}</p><p class="prog-sub">${ex.sub}</p>
+      ${cur1rm!==null ? `
+        <div style="display:flex;align-items:baseline;gap:4px;margin-bottom:4px;">
+          <span class="prog-w">${cur1rm}</span><span class="prog-unit">kg</span>${trendHtml}
+        </div>
+        <p style="font-size:12px;color:#aaa;margin-bottom:2px;">最大挙上重量${prev1rm!==null?` / 前回: ${prev1rm}kg`:''}</p>
+        ${setsDetail}${rackInfo}
+        <div class="mini-log">
+          <div class="mini-row" style="font-weight:600;color:#111;margin-bottom:2px;"><span>日付</span><span>1RM</span><span>rep</span><span>volume</span></div>
+          ${miniRows}
+        </div>` : '<p style="font-size:13px;color:#bbb;">まだ記録なし</p>'}
+    </div>`;
+  }).join('');
+}
+
+// =====================
+// グラフ
+// =====================
+let currentGraphEx   = WEIGHT_EX[0].id;
+let currentGraphType = '1rm';
+
+function setGraphType(t) {
+  currentGraphType = t;
+  document.getElementById('gtype-1rm').classList.toggle('active', t==='1rm');
+  document.getElementById('gtype-vol').classList.toggle('active', t==='vol');
+  renderGraph();
+}
+
+function renderGraph() {
+  const exId  = currentGraphEx;
+  const gtype = currentGraphType;
+  document.getElementById('graph-ex-tabs').innerHTML = WEIGHT_EX.map(ex =>
+    `<button class="graph-tab${ex.id===exId?' active':''}" onclick="currentGraphEx='${ex.id}';renderGraph()">${ex.name}</button>`
+  ).join('');
+  const ex = EXERCISES.find(e => e.id === exId);
+  const history = [];
+  for (let i = logs.length-1; i >= 0; i--) {
+    const e = logs[i].exercises.find(x => x.id === exId);
+    if (e && e.sets && e.sets.length) {
+      const m1  = Math.max(...e.sets.map(s=>calc1rm(s.weight,s.reps,ex.heavyFormula)||0));
+      const vol = e.sets.reduce((a,s)=>a+s.weight*s.reps,0);
+      if (m1 > 0) history.push({ date:logs[i].date, val:gtype==='1rm'?m1:vol });
+    }
+  }
+  const areaEl = document.getElementById('graph-area');
+  if (!history.length) { areaEl.innerHTML='<div class="empty">まだ記録がありません</div>'; return; }
+
+  const padL=48,padR=16,padT=24,padB=36,chartH=160,ptW=60;
+  const svgW = Math.max(padL + ptW*Math.max(history.length-1,1) + padR*2, 300);
+  const maxVal = Math.max(...history.map(h=>h.val));
+  const minVal = Math.min(...history.map(h=>h.val));
+  const scaleMax = Math.ceil((maxVal+maxVal*0.05)/10)*10;
+  const scaleMin = Math.max(0, Math.floor((minVal-minVal*0.05)/10)*10);
+  const range = scaleMax - scaleMin || 1;
+  const gy = v => padT + chartH - (v-scaleMin)/range*chartH;
+  const gx = i => padL + i*ptW;
+
+  let ticks = '';
+  for (let i=0; i<=4; i++) {
+    const v = scaleMin + Math.round(range/4*i);
+    const ty = gy(v);
+    ticks += `<line x1="${padL}" y1="${ty}" x2="${svgW-padR}" y2="${ty}" stroke="#eee" stroke-width="1"/>
+    <text x="${padL-6}" y="${ty+4}" text-anchor="end" font-size="10" fill="#aaa">${v}</text>`;
+  }
+  const pts     = history.map((_,i)=>`${gx(i)},${gy(history[i].val)}`).join(' ');
+  const areaPts = history.length>1 ? `${gx(0)},${padT+chartH} ${pts} ${gx(history.length-1)},${padT+chartH}` : '';
+  const dots    = history.map((h,i)=>`
+    <circle cx="${gx(i)}" cy="${gy(h.val)}" r="5" fill="#fff" stroke="#111" stroke-width="2"/>
+    <text x="${gx(i)}" y="${gy(h.val)-10}" text-anchor="middle" font-size="10" fill="#555">${h.val}</text>
+    <text x="${gx(i)}" y="${padT+chartH+16}" text-anchor="middle" font-size="10" fill="#aaa">${h.date.slice(5)}</text>`
+  ).join('');
+
+  areaEl.innerHTML = `<div class="bar-wrap">
+    <svg width="${svgW}" height="${padT+chartH+padB}" style="min-width:${svgW}px;display:block;">
+      ${ticks}
+      ${areaPts?`<polyline points="${areaPts}" fill="#111" fill-opacity="0.05" stroke="none"/>`:''}
+      ${history.length>1?`<polyline points="${pts}" fill="none" stroke="#111" stroke-width="2" stroke-linejoin="round"/>`:''}
+      ${dots}
+      <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT+chartH}" stroke="#ddd" stroke-width="1"/>
+    </svg>
+  </div>
+  <p style="font-size:12px;color:#aaa;margin-top:8px;text-align:center;">${gtype==='1rm'?'最大挙上重量 (推定1RM) kg':'ボリューム (重量×rep合計) kg'}</p>`;
+}
+
+// =====================
+// 履歴
+// =====================
+function renderHistory() {
+  const el = document.getElementById('history-list');
+  if (!logs.length) { el.innerHTML='<div class="empty">まだ記録がありません</div>'; return; }
+  el.innerHTML = logs.map((l, li) => `<div class="hist-card" id="hcard-${li}">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <p style="font-size:13px;color:#888;">${l.date}</p>
+      <div style="display:flex;gap:6px;">
+        <button class="btn" style="padding:6px 12px;font-size:12px;" onclick="startEdit(${li})">編集</button>
+        <button class="btn btn-danger" style="padding:6px 12px;font-size:12px;" onclick="confirmDelete(${li})">削除</button>
+      </div>
+    </div>
+    <div id="delete-confirm-${li}" style="display:none;" class="confirm-bar">
+      <p style="flex:1;font-size:13px;color:#c62828;">本当に削除しますか？</p>
+      <button class="btn btn-danger" style="padding:6px 12px;font-size:12px;" onclick="doDelete(${li})">削除する</button>
+      <button class="btn" style="padding:6px 12px;font-size:12px;" onclick="cancelDelete(${li})">キャンセル</button>
+    </div>
+    ${l.exercises.map(e=>`<div class="hist-item">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+        <span class="badge">${e.cat}</span>
+        <span style="font-size:14px;font-weight:600;">${e.name}</span>
+      </div>
+      ${e.sets&&e.sets.length
+        ? e.sets.map((s,i)=>`<span style="font-size:12px;color:#888;margin-right:8px;">${i+1}セット: ${s.weight}kg × ${s.reps}rep</span>`).join('')
+        : e.duration!==undefined ? `<span style="font-size:12px;color:#888;">${e.duration}分${e.intensity?' / 強度: '+e.intensity:''}${e.speed?' / 速さ: '+e.speed:''}</span>` : ''}
+      ${e.rack?`<p style="font-size:11px;color:#aaa;margin-top:3px;">ラック: ${e.rack}${e.safety?' / セーフティ: '+e.safety:''}</p>`:''}
+    </div>`).join('')}
+  </div>`).join('');
+}
+
+function confirmDelete(idx) { document.getElementById(`delete-confirm-${idx}`).style.display='flex'; }
+function cancelDelete(idx)  { document.getElementById(`delete-confirm-${idx}`).style.display='none'; }
+function doDelete(idx)      { logs.splice(idx,1); saveAll(); renderHistory(); }
+
+function startEdit(logIdx) {
+  const l    = logs[logIdx];
+  const card = document.getElementById(`hcard-${logIdx}`);
+  card.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+    <p style="font-size:14px;font-weight:600;">${l.date} 編集中</p>
+    <div style="display:flex;gap:6px;">
+      <button class="btn btn-primary" style="padding:6px 12px;font-size:12px;" onclick="commitEdit(${logIdx})">保存</button>
+      <button class="btn" style="padding:6px 12px;font-size:12px;" onclick="renderHistory()">キャンセル</button>
+    </div>
+  </div>
+  ${l.exercises.map((e,ei) => {
+    const ex = EXERCISES.find(x => x.id === e.id);
+    if (!ex) return '';
+    if (e.duration !== undefined) {
+      return `<div style="margin-bottom:12px;">
+        <p style="font-size:13px;font-weight:600;margin-bottom:8px;">${e.name}</p>
+        <div class="set-row"><span class="set-lbl">時間</span>
+          <select id="edit-${logIdx}-${ei}-dur" style="flex:1;">${ex.durOpts.map(v=>`<option value="${v}"${v===e.duration?' selected':''}>${v}分</option>`).join('')}</select>
+        </div>
+        <div class="set-row"><span class="set-lbl">強度</span><input type="number" id="edit-${logIdx}-${ei}-int" value="${e.intensity||''}" style="flex:1;" /></div>
+        <div class="set-row"><span class="set-lbl">速さ</span><input type="number" id="edit-${logIdx}-${ei}-spd" value="${e.speed||''}" step="0.1" style="flex:1;" /></div>
+      </div>`;
+    }
+    return `<div style="margin-bottom:12px;">
+      <p style="font-size:13px;font-weight:600;margin-bottom:8px;">${e.name}</p>
+      ${e.sets.map((s,si)=>`<div class="set-row">
+        <span class="set-lbl">${si+1}セット</span>
+        <select id="edit-${logIdx}-${ei}-w-${si}" style="flex:1;">${ex.options.map(v=>`<option value="${v}"${v===s.weight?' selected':''}>${v}${ex.unit}</option>`).join('')}</select>
+        <span class="set-lbl2">rep</span>
+        <div style="width:72px;">${repSelect(`edit-${logIdx}-${ei}-r-${si}`,s.reps)}</div>
+      </div>`).join('')}
+    </div>`;
+  }).join('')}`;
+}
+
+function commitEdit(logIdx) {
+  const l = logs[logIdx];
+  l.exercises = l.exercises.map((e,ei) => {
+    const ex = EXERCISES.find(x => x.id === e.id);
+    if (!ex) return e;
+    if (e.duration !== undefined) {
+      return { ...e,
+        duration:  parseInt(document.getElementById(`edit-${logIdx}-${ei}-dur`).value)||0,
+        intensity: document.getElementById(`edit-${logIdx}-${ei}-int`).value,
+        speed:     document.getElementById(`edit-${logIdx}-${ei}-spd`).value
+      };
+    }
+    const sets = e.sets.map((s,si) => {
+      const w = parseFloat(document.getElementById(`edit-${logIdx}-${ei}-w-${si}`).value);
+      const r = parseInt(document.getElementById(`edit-${logIdx}-${ei}-r-${si}`).value)||0;
+      return r > 0 ? {weight:w, reps:r} : null;
+    }).filter(Boolean);
+    return { ...e, sets };
+  });
+  saveAll();
+  renderHistory();
+  renderProgress();
+}
+
+// =====================
+// サブメニュー
+// =====================
+function addSubItem() {
+  const id = 'sub_' + Date.now();
+  subItems.push({ id, name:'', weight:'', history:[] });
+  saveAll();
+  renderSubTab();
+  // 新しく追加したカードの種目名入力にフォーカス
+  setTimeout(() => {
+    const el = document.getElementById(`sub-name-${id}`);
+    if (el) el.focus();
+  }, 100);
+}
+
+function deleteSubItem(id) {
+  subItems = subItems.filter(s => s.id !== id);
+  saveAll();
+  renderSubTab();
+}
+
+function saveSubItemMeta(id) {
+  const item = subItems.find(s => s.id === id);
+  if (!item) return;
+  const nameEl   = document.getElementById(`sub-name-${id}`);
+  const weightEl = document.getElementById(`sub-weight-${id}`);
+  if (nameEl)   item.name   = nameEl.value;
+  if (weightEl) item.weight = weightEl.value;
+  saveAll();
+}
+
+function saveSubLog(id) {
+  const item = subItems.find(s => s.id === id);
+  if (!item) return;
+
+  // 種目名・重量を最新に更新
+  const nameEl   = document.getElementById(`sub-name-${id}`);
+  const weightEl = document.getElementById(`sub-weight-${id}`);
+  if (nameEl)   item.name   = nameEl.value;
+  if (weightEl) item.weight = weightEl.value;
+
+  if (!item.name) { alert('種目名を入力してください'); return; }
+
+  const sets = [1,2,3].map(s => {
+    const r = parseInt(document.getElementById(`sub-r-${id}-${s}`).value) || 0;
+    return { reps: r };
+  });
+
+  // 最大2件のみ保持（新しい記録を先頭に、古い2件目を削除）
+  item.history.unshift({ date: new Date().toLocaleDateString('ja-JP'), weight: item.weight, sets });
+  if (item.history.length > 2) item.history = item.history.slice(0, 2);
+
+  saveAll();
+  renderSubTab();
+}
+
+function renderSubTab() {
+  const el = document.getElementById('sub-log-form');
+  if (!subItems.length) {
+    el.innerHTML = '<div class="empty">種目を追加してください</div>';
+    return;
+  }
+  el.innerHTML = subItems.map(item => {
+    const hist0 = item.history[0];
+    const hist1 = item.history[1];
+    return `<div class="sub-item-card" id="sub-card-${item.id}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <p class="sub-section-title" style="margin-bottom:0;border-bottom:none;padding-bottom:0;">サブ種目</p>
+        <button class="btn btn-danger" style="padding:4px 10px;font-size:12px;" onclick="confirmDeleteSub('${item.id}')">削除</button>
+      </div>
+      <div id="sub-delete-confirm-${item.id}" style="display:none;" class="confirm-bar">
+        <p style="flex:1;font-size:13px;color:#c62828;">削除しますか？</p>
+        <button class="btn btn-danger" style="padding:5px 10px;font-size:12px;" onclick="deleteSubItem('${item.id}')">削除する</button>
+        <button class="btn" style="padding:5px 10px;font-size:12px;" onclick="cancelDeleteSub('${item.id}')">キャンセル</button>
+      </div>
+
+      <div class="set-row" style="margin-bottom:8px;">
+        <span class="set-lbl">種目名</span>
+        <input type="text" id="sub-name-${item.id}" placeholder="例: ダンベルカール" value="${item.name}"
+          oninput="saveSubItemMeta('${item.id}')" style="flex:1;" />
+      </div>
+      <div class="set-row" style="margin-bottom:12px;">
+        <span class="set-lbl">重量</span>
+        <input type="text" id="sub-weight-${item.id}" placeholder="例: 15kg" value="${item.weight}"
+          oninput="saveSubItemMeta('${item.id}')" style="flex:1;" />
+      </div>
+
+      <div class="sets-grid" style="margin-bottom:12px;">
+        ${[1,2,3].map(s => {
+          const defR = hist0 ? 0 : 0; // rep常に0スタート
+          return `<div class="set-cell"><p class="set-cell-lbl">${s}セット rep</p>
+            ${repSelect(`sub-r-${item.id}-${s}`, 0)}
+          </div>`;
+        }).join('')}
+      </div>
+
+      <button class="btn btn-primary" style="width:100%;padding:10px;" onclick="saveSubLog('${item.id}')">この種目を記録</button>
+
+      ${hist0 || hist1 ? `<div style="margin-top:12px;">
+        <p class="sub-section-title">記録履歴（最新2件）</p>
+        ${hist0 ? `<div class="sub-history-block" style="margin-bottom:8px;">
+          <p class="sub-history-label">1回前 (${hist0.date}) - 重量: ${hist0.weight||'-'}</p>
+          <div>${hist0.sets.map((s,i)=>`<span style="font-size:12px;color:#555;margin-right:10px;">${i+1}セット: ${s.reps}rep</span>`).join('')}</div>
+        </div>` : ''}
+        ${hist1 ? `<div class="sub-history-block">
+          <p class="sub-history-label">2回前 (${hist1.date}) - 重量: ${hist1.weight||'-'}</p>
+          <div>${hist1.sets.map((s,i)=>`<span style="font-size:12px;color:#555;margin-right:10px;">${i+1}セット: ${s.reps}rep</span>`).join('')}</div>
+        </div>` : ''}
+      </div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function confirmDeleteSub(id) { document.getElementById(`sub-delete-confirm-${id}`).style.display='flex'; }
+function cancelDeleteSub(id)  { document.getElementById(`sub-delete-confirm-${id}`).style.display='none'; }
+
+// =====================
+// 初期化
+// =====================
+renderLogForm();
+</script>
+</body>
+</html>
